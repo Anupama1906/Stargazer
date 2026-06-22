@@ -1,0 +1,209 @@
+:root {
+  --bg: #080c1f;
+  --bg2: #0d1230;
+  --text: #c8d8f0;
+  --text-dim: rgba(200, 216, 240, 0.4);
+  --text-gold: #c8ba8a;
+  --accent: #4fc3f7;
+  --accent-glow: rgba(79, 195, 247, 0.35);
+  --goal: #ffd166;
+  --goal-glow: rgba(255, 209, 102, 0.4);
+  --font-title: 'Orbitron', monospace;
+  --font-body: 'Exo 2', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  width: 100vw; height: 100vh;
+  position: relative; overflow: hidden;
+}
+
+/* ── SCREENS ── */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+.screen.active { opacity: 1; pointer-events: all; }
+
+canvas.layer {
+  position: absolute; inset: 0;
+  display: block;
+}
+
+/* ── MAIN MENU ── */
+.menu-title {
+  position: absolute; top: 7%; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-title); font-weight: 300;
+  font-size: clamp(1.4rem, 3.8vw, 2.6rem);
+  letter-spacing: 0.55em; color: var(--text-gold);
+  text-transform: uppercase; z-index: 10;
+  white-space: nowrap;
+  text-shadow: 0 0 40px rgba(200, 186, 138, 0.3);
+}
+.menu-play-label {
+  position: absolute; bottom: 13%; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-title); font-weight: 300;
+  font-size: clamp(0.65rem, 1.6vw, 1rem);
+  letter-spacing: 0.5em; color: var(--text);
+  opacity: 0.55; z-index: 10; text-transform: uppercase;
+}
+
+/* ── LEVEL SELECT ── */
+.level-title {
+  position: absolute; top: 7%; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-title); font-weight: 300;
+  font-size: clamp(0.8rem, 2.2vw, 1.4rem);
+  letter-spacing: 0.5em; color: var(--text-gold);
+  text-transform: uppercase; z-index: 10; white-space: nowrap;
+}
+
+/* ── GAME HUD ── */
+.game-hud {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: clamp(1rem, 2.5vw, 1.8rem) clamp(1.2rem, 3vw, 2.2rem);
+}
+
+.hud-back {
+  background: none;
+  border: 1px solid rgba(200, 220, 255, 0.18);
+  color: var(--text-dim); font-family: var(--font-title);
+  font-size: 0.6rem; letter-spacing: 0.3em;
+  padding: 0.5rem 1.1rem; cursor: pointer;
+  text-transform: uppercase; transition: all 0.25s;
+  border-radius: 1px;
+}
+.hud-back:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(79, 195, 247, 0.06);
+  box-shadow: 0 0 12px rgba(79, 195, 247, 0.15);
+}
+
+.hud-center { text-align: center; }
+.hud-level-name {
+  font-family: var(--font-title); font-weight: 300;
+  font-size: clamp(0.55rem, 1.4vw, 0.85rem);
+  letter-spacing: 0.35em; color: var(--text-gold);
+  text-transform: uppercase;
+}
+.hud-level-num {
+  font-size: 0.62rem; color: var(--text-dim);
+  letter-spacing: 0.2em; margin-top: 0.2rem;
+}
+
+.hud-moves { text-align: right; }
+.hud-moves-count {
+  font-family: var(--font-title);
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  color: var(--text); line-height: 1;
+}
+.hud-moves-label {
+  font-size: 0.6rem; color: var(--text-dim);
+  letter-spacing: 0.3em; text-transform: uppercase;
+}
+.hud-par {
+  font-size: 0.6rem; color: var(--text-dim);
+  letter-spacing: 0.15em; margin-top: 0.1rem;
+}
+.hud-par span { color: rgba(200, 186, 138, 0.7); }
+
+/* ── WIN MODAL ── */
+.win-overlay {
+  position: absolute; inset: 0;
+  background: rgba(8, 12, 31, 0.82);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; opacity: 0; pointer-events: none;
+  transition: opacity 0.5s ease;
+  backdrop-filter: blur(6px);
+}
+.win-overlay.show { opacity: 1; pointer-events: all; }
+
+.win-modal {
+  text-align: center;
+  padding: clamp(1.8rem, 4vw, 2.8rem) clamp(2rem, 5vw, 3.5rem);
+  border: 1px solid rgba(200, 220, 255, 0.1);
+  background: rgba(10, 15, 40, 0.95);
+  max-width: 380px; width: 92%;
+  position: relative;
+}
+.win-modal::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,209,102,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.win-title {
+  font-family: var(--font-title); font-weight: 300;
+  font-size: clamp(0.8rem, 2vw, 1.1rem);
+  letter-spacing: 0.6em; color: var(--text-gold);
+  text-transform: uppercase; margin-bottom: 1.6rem;
+}
+
+.win-stars {
+  display: flex; justify-content: center;
+  gap: clamp(0.6rem, 2vw, 1.2rem); margin-bottom: 1.4rem;
+}
+.win-star {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  opacity: 0.15; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: grayscale(1);
+}
+.win-star.lit {
+  opacity: 1; filter: none;
+  text-shadow: 0 0 14px #ffd166, 0 0 28px rgba(255,209,102,0.5);
+  transform: scale(1.1);
+}
+
+.win-info {
+  font-size: 0.75rem; color: var(--text-dim);
+  letter-spacing: 0.12em; margin-bottom: 2rem;
+  line-height: 1.8;
+}
+.win-info strong { color: var(--text); font-weight: 400; }
+
+.win-btns {
+  display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap;
+}
+.win-btn {
+  background: none;
+  border: 1px solid rgba(200, 220, 255, 0.18);
+  color: var(--text-dim); font-family: var(--font-title);
+  font-size: 0.58rem; letter-spacing: 0.3em;
+  padding: 0.65rem 1.3rem; cursor: pointer;
+  text-transform: uppercase; transition: all 0.22s;
+}
+.win-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(79, 195, 247, 0.06);
+}
+.win-btn.primary {
+  border-color: rgba(255, 209, 102, 0.35);
+  color: rgba(255, 209, 102, 0.85);
+}
+.win-btn.primary:hover {
+  background: rgba(255, 209, 102, 0.07);
+  border-color: rgba(255, 209, 102, 0.6);
+  color: var(--goal);
+}
+
+/* ── TOOLTIP ── */
+.game-tip {
+  position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%);
+  font-size: 0.65rem; color: var(--text-dim);
+  letter-spacing: 0.2em; text-align: center; z-index: 10;
+  pointer-events: none; white-space: nowrap;
+  transition: opacity 0.5s;
+}
+.game-tip.hidden { opacity: 0; }
