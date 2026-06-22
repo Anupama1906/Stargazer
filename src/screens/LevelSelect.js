@@ -5,9 +5,11 @@ import { levels } from '../game/levels.js';
 // Each orbit has 5 positions arranged at equal angles, starting from top.
 
 export default class LevelSelect {
-  constructor(container, navigate) {
+  constructor(container, navigate, data = {}) {
     this.container  = container;
     this.navigate   = navigate;
+    this.galaxyId   = data.galaxyId || 1;
+    this.galaxyLevels = levels.filter(l => l.galaxyId === this.galaxyId);
     this.raf        = null;
     this.t          = 0;
     this.stars      = [];
@@ -61,13 +63,18 @@ export default class LevelSelect {
     this.innerR = md * 0.19;
     this.outerR = md * 0.36;
 
-    this.nodes = levels.map((lvl, i) => {
+    this.nodes = this.galaxyLevels.map((lvl, i) => {
       const onInner = i < 5;
       const posIdx  = i % 5;            // 0-4 within its orbit
       const r       = onInner ? this.innerR : this.outerR;
       const angle   = (posIdx / 5) * Math.PI * 2 - Math.PI / 2;
       const prog    = this.progress[lvl.id] || { stars: 0 };
-      const unlocked = lvl.id === 1 || (this.progress[lvl.id - 1]?.stars > 0);
+      
+      // Determine if unlocked: it's unlocked if it's the first level of the game (id 1) 
+      // or if the previous level has > 0 stars. For galaxy 2, level 11 is unlocked if level 10 has stars?
+      // Or just if it's the first level of the galaxy (i===0) or previous level has stars.
+      const unlocked = i === 0 || (this.progress[this.galaxyLevels[i - 1].id]?.stars > 0);
+      
       return {
         lvl, i,
         x: cx + r * Math.cos(angle),
@@ -107,7 +114,7 @@ export default class LevelSelect {
       const n = this.nodes[idx];
       if (n.unlocked) this.navigate('game', { levelId: n.lvl.id });
     } else if (e.clientX < 110 && e.clientY < 70) {
-      this.navigate('main-menu');
+      this.navigate('galaxy-select');
     }
   }
 
@@ -160,7 +167,7 @@ export default class LevelSelect {
 
       case 'Escape':
         e.preventDefault();
-        this.navigate('main-menu');
+        this.navigate('galaxy-select');
         break;
 
       default: return;
@@ -191,12 +198,22 @@ export default class LevelSelect {
     rg.addColorStop(1, 'rgba(8,12,31,0)');
     ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
 
-    // Orbit rings
+    // Orbit rings and spokes
+    ctx.strokeStyle = 'rgba(200,220,255,0.12)';
+    ctx.lineWidth   = 0.8;
     [this.innerR, this.outerR].forEach(r => {
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(200,220,255,0.12)';
-      ctx.lineWidth   = 0.8; ctx.stroke();
+      ctx.stroke();
     });
+    
+    // Spokes
+    for (let s = 0; s < 5; s++) {
+      const angle = (s / 5) * Math.PI * 2 - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + this.innerR * Math.cos(angle), cy + this.innerR * Math.sin(angle));
+      ctx.lineTo(cx + this.outerR * Math.cos(angle), cy + this.outerR * Math.sin(angle));
+      ctx.stroke();
+    }
 
     // Connecting lines between levels
     ctx.beginPath();
@@ -224,12 +241,21 @@ export default class LevelSelect {
     ctx.fillText('← BACK', 28, 38);
     ctx.restore();
 
-    // Keyboard hint
+    // Selected Level Name (bottom text)
+    const activeIdx = (this.hovered !== null && this.hovered !== -1) ? this.hovered : this.focusedIdx;
+    const activeLevel = this.nodes[activeIdx]?.lvl?.name || '';
     ctx.save();
-    ctx.font      = "300 9px 'Orbitron',monospace";
-    ctx.fillStyle = 'rgba(200,216,240,0.22)';
+    ctx.font      = "400 14px 'Orbitron',monospace";
+    ctx.fillStyle = 'rgba(200,216,240,0.8)';
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('← → ORBIT   ↑ OUTER   ↓ INNER   ENTER SELECT   ESC BACK', W / 2, H - 18);
+    ctx.letterSpacing = '2px';
+    ctx.fillText(activeLevel.toUpperCase(), W / 2, H - 24);
+    
+    // Controls hint
+    ctx.font = "300 9px 'Orbitron',monospace";
+    ctx.fillStyle = 'rgba(200,216,240,0.22)';
+    ctx.letterSpacing = 'normal';
+    ctx.fillText('ENTER SELECT   ESC BACK', W / 2, H - 10);
     ctx.restore();
   }
 
@@ -297,7 +323,7 @@ export default class LevelSelect {
       : (hasStars ? `rgba(255,209,102,${isHov ? 0.6 : 0.35})` : (isHov ? 'rgba(79,195,247,0.6)' : 'rgba(200,220,255,0.24)'));
     ctx.lineWidth = 0.8; ctx.stroke();
 
-    // Level number — dark on focused (white bg), colored otherwise
+    // Level number
     ctx.save();
     ctx.font         = "700 11px 'Orbitron',monospace";
     ctx.textAlign    = 'center';
@@ -305,7 +331,8 @@ export default class LevelSelect {
     ctx.fillStyle    = isFocused
       ? 'rgba(8,12,31,0.9)'
       : (hasStars ? '#ffd166' : (isHov ? '#4fc3f7' : 'rgba(200,220,255,0.8)'));
-    ctx.fillText(node.lvl.id, node.x, hasStars ? node.y - 5 : node.y);
+    // Display 1-10 regardless of actual level ID
+    ctx.fillText((idx + 1).toString(), node.x, hasStars ? node.y - 5 : node.y);
     ctx.restore();
 
     // Star dots

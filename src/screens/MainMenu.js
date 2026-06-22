@@ -51,7 +51,7 @@ export default class MainMenu {
     this.orbitR = Math.min(W, H) * 0.265;
 
     this.buttons = [
-      { id:'play',     angle: -Math.PI / 2, icon:'▶', action: () => this.navigate('level-select') },
+      { id:'play',     angle: -Math.PI / 2, icon:'▶', action: () => this.navigate('galaxy-select') },
       { id:'help',     angle:  0,           icon:'?', action: () => this._help() },
       { id:'quit',     angle:  Math.PI / 2, icon:'✕', action: () => window.close() },
       { id:'settings', angle:  Math.PI,     icon:'✦', action: () => {} },

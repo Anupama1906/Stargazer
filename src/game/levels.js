@@ -1,5 +1,9 @@
-// Each level: rings, sectors, start [ring,sector], goal [ring,sector], blocked [[r,s]...]
-export const levels = [
+export const galaxies = [
+  { id: 1, name: 'Andromeda' },
+  { id: 2, name: 'Milky Way' }
+];
+
+const baseLevels = [
   {
     id: 1, name: 'First Connection',
     rings: 2, sectors: 4,
@@ -98,3 +102,15 @@ export const levels = [
     blocked: [[2, 1], [3, 2], [4, 4]]
   }
 ];
+
+export const levels = [];
+
+// Galaxy 1
+baseLevels.forEach(lvl => {
+  levels.push({ ...lvl, galaxyId: 1 });
+});
+
+// Galaxy 2
+baseLevels.forEach(lvl => {
+  levels.push({ ...lvl, id: lvl.id + 10, galaxyId: 2, name: lvl.name + ' II' });
+});

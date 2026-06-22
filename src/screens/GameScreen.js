@@ -43,7 +43,8 @@ export default class GameScreen {
   // ── init ─────────────────────────────────────────────────────────────
 
   _init() {
-    const hasNext = this.levelId < levels.length;
+    const nextLevel = levels.find(l => l.galaxyId === this.lvl.galaxyId && l.id > this.lvl.id);
+    const hasNext = !!nextLevel;
 
     this.container.innerHTML = `
       <div class="screen" id="gs-screen">
@@ -52,7 +53,7 @@ export default class GameScreen {
           <button class="hud-back" id="gs-back">← BACK</button>
           <div class="hud-center">
             <div class="hud-level-name">${this.lvl.name}</div>
-            <div class="hud-level-num">LEVEL ${this.lvl.id} / ${levels.length}</div>
+            <div class="hud-level-num">LEVEL ${(this.lvl.id - 1) % 10 + 1} / 10</div>
           </div>
           <div class="hud-moves">
             <div class="hud-moves-label" id="gs-status">NAVIGATE</div>
@@ -85,11 +86,12 @@ export default class GameScreen {
     window.addEventListener('resize',  this._onResize);
     window.addEventListener('keydown', this._onKey);
 
-    document.getElementById('gs-back').addEventListener('click', () => this.navigate('level-select'));
+    document.getElementById('gs-back').addEventListener('click', () => this.navigate('level-select', { galaxyId: this.lvl.galaxyId }));
     document.getElementById('ws-retry').addEventListener('click', () => this.navigate('game', { levelId: this.levelId }));
-    document.getElementById('ws-levels').addEventListener('click', () => this.navigate('level-select'));
-    if (hasNext)
-      document.getElementById('ws-next').addEventListener('click', () => this.navigate('game', { levelId: this.levelId + 1 }));
+    document.getElementById('ws-levels').addEventListener('click', () => this.navigate('level-select', { galaxyId: this.lvl.galaxyId }));
+    if (hasNext) {
+      document.getElementById('ws-next').addEventListener('click', () => this.navigate('game', { levelId: nextLevel.id }));
+    }
 
     this._genStars();
 
@@ -106,7 +108,7 @@ export default class GameScreen {
     const H = this.canvas.height = window.innerHeight;
 
     const hudH      = Math.min(H * 0.14, 90);
-    const avail     = Math.min(W, H - hudH) * 0.84;
+    const avail     = Math.min(W, H - hudH) * 0.6; // Reduced from 0.84 to make grid smaller
     const ringWidth = avail / (this.lvl.rings * 2);
     const baseRadius = ringWidth * 1.5;
 
@@ -203,7 +205,7 @@ export default class GameScreen {
         this._updateStatus();
         playInvalid();
       } else {
-        this.navigate('level-select');
+        this.navigate('level-select', { galaxyId: this.lvl.galaxyId });
       }
       return;
     }
