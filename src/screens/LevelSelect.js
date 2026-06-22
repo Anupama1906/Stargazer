@@ -1,4 +1,5 @@
 import { levels } from '../game/levels.js';
+import { settings } from '../utils/settings.js';
 
 // Inner orbit: levels 1-5 (nodeIdx 0-4)
 // Outer orbit: levels 6-10 (nodeIdx 5-9)
@@ -182,24 +183,25 @@ export default class LevelSelect {
     const { ctx, canvas, t } = this;
     const W = canvas.width, H = canvas.height;
     const cx = W / 2, cy = H / 2;
+    const theme = settings.getTheme();
 
-    ctx.fillStyle = '#080c1f';
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, W, H);
 
     this.stars.forEach(s => {
       s.ph += s.spd;
       const o = s.o * (0.5 + 0.5 * Math.sin(s.ph));
       ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(200,220,255,${o})`; ctx.fill();
+      ctx.fillStyle = theme.starBase + o + ')'; ctx.fill();
     });
 
     const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, this.outerR * 1.4);
-    rg.addColorStop(0, 'rgba(16,24,72,0.22)');
-    rg.addColorStop(1, 'rgba(8,12,31,0)');
+    rg.addColorStop(0, theme.bgGradStart);
+    rg.addColorStop(1, theme.bgGradEnd);
     ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
 
     // Orbit rings and spokes
-    ctx.strokeStyle = 'rgba(200,220,255,0.12)';
+    ctx.strokeStyle = `rgba(${theme.primary}, 0.12)`;
     ctx.lineWidth   = 0.8;
     [this.innerR, this.outerR].forEach(r => {
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -221,22 +223,22 @@ export default class LevelSelect {
       if (i === 0) ctx.moveTo(n.x, n.y);
       else ctx.lineTo(n.x, n.y);
     });
-    ctx.strokeStyle = 'rgba(200,220,255,0.2)';
+    ctx.strokeStyle = `rgba(${theme.primary}, 0.2)`;
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 4]);
     ctx.stroke();
     ctx.setLineDash([]);
 
     // Nucleus
-    this._miniStar(cx, cy, Math.min(W, H) * 0.052, t * 0.03);
+    this._miniStar(cx, cy, Math.min(W, H) * 0.052, t * 0.03, theme);
 
     // Level nodes
-    this.nodes.forEach((n, i) => this._drawNode(n, i, t));
+    this.nodes.forEach((n, i) => this._drawNode(n, i, t, theme));
 
     // Back
     ctx.save();
     ctx.font = "300 10px 'Orbitron',monospace";
-    ctx.fillStyle = 'rgba(200,216,240,0.38)';
+    ctx.fillStyle = `rgba(${theme.primary}, 0.38)`;
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillText('← BACK', 28, 38);
     ctx.restore();
@@ -246,23 +248,23 @@ export default class LevelSelect {
     const activeLevel = this.nodes[activeIdx]?.lvl?.name || '';
     ctx.save();
     ctx.font      = "400 14px 'Orbitron',monospace";
-    ctx.fillStyle = 'rgba(200,216,240,0.8)';
+    ctx.fillStyle = `rgba(${theme.primary}, 0.8)`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.letterSpacing = '2px';
     ctx.fillText(activeLevel.toUpperCase(), W / 2, H - 24);
     
     // Controls hint
     ctx.font = "300 9px 'Orbitron',monospace";
-    ctx.fillStyle = 'rgba(200,216,240,0.22)';
+    ctx.fillStyle = `rgba(${theme.primary}, 0.22)`;
     ctx.letterSpacing = 'normal';
     ctx.fillText('ENTER SELECT   ESC BACK', W / 2, H - 10);
     ctx.restore();
   }
 
-  _miniStar(cx, cy, size, rot) {
+  _miniStar(cx, cy, size, rot, theme) {
     const ctx = this.ctx, pts = 8;
     ctx.save();
-    ctx.shadowColor = 'rgba(255,255,255,0.1)'; ctx.shadowBlur = 18;
+    ctx.shadowColor = `rgba(${theme.primary}, 0.1)`; ctx.shadowBlur = 18;
     ctx.beginPath();
     for (let i = 0; i < pts * 2; i++) {
       const a = rot + (i * Math.PI) / pts;
@@ -276,7 +278,7 @@ export default class LevelSelect {
     ctx.restore();
   }
 
-  _drawNode(node, idx, t) {
+  _drawNode(node, idx, t, theme) {
     const ctx       = this.ctx;
     const isFocused = idx === this.focusedIdx;
     const isHov     = this.hovered === idx;
@@ -286,10 +288,10 @@ export default class LevelSelect {
     if (!node.unlocked) {
       ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
       ctx.fillStyle   = 'rgba(10,14,38,0.7)'; ctx.fill();
-      ctx.strokeStyle = 'rgba(200,220,255,0.08)'; ctx.lineWidth = 0.7; ctx.stroke();
+      ctx.strokeStyle = `rgba(${theme.primary}, 0.08)`; ctx.lineWidth = 0.7; ctx.stroke();
       ctx.font = '12px sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(200,220,255,0.18)';
+      ctx.fillStyle = `rgba(${theme.primary}, 0.18)`;
       ctx.fillText('⬤', node.x, node.y);
       return;
     }
@@ -305,9 +307,9 @@ export default class LevelSelect {
       ctx.restore();
     } else if (isHov) {
       ctx.save();
-      ctx.shadowColor = 'rgba(79,195,247,0.55)'; ctx.shadowBlur = 18;
+      ctx.shadowColor = `rgba(${theme.highlight}, 0.55)`; ctx.shadowBlur = 18;
       ctx.beginPath(); ctx.arc(node.x, node.y, r + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(79,195,247,0.45)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.strokeStyle = `rgba(${theme.highlight}, 0.45)`; ctx.lineWidth = 1; ctx.stroke();
       ctx.restore();
     }
 
@@ -316,11 +318,11 @@ export default class LevelSelect {
     const hasStars = node.stars > 0;
     ctx.fillStyle = isFocused
       ? 'rgba(255,255,255,0.92)'
-      : (hasStars ? 'rgba(255,209,102,0.1)' : (isHov ? 'rgba(79,195,247,0.1)' : 'rgba(10,14,38,0.85)'));
+      : (hasStars ? 'rgba(255,209,102,0.1)' : (isHov ? `rgba(${theme.highlight}, 0.1)` : 'rgba(10,14,38,0.85)'));
     ctx.fill();
     ctx.strokeStyle = isFocused
       ? 'rgba(255,255,255,0.85)'
-      : (hasStars ? `rgba(255,209,102,${isHov ? 0.6 : 0.35})` : (isHov ? 'rgba(79,195,247,0.6)' : 'rgba(200,220,255,0.24)'));
+      : (hasStars ? `rgba(255,209,102,${isHov ? 0.6 : 0.35})` : (isHov ? `rgba(${theme.highlight}, 0.6)` : `rgba(${theme.primary}, 0.24)`));
     ctx.lineWidth = 0.8; ctx.stroke();
 
     // Level number
@@ -330,9 +332,9 @@ export default class LevelSelect {
     ctx.textBaseline = 'middle';
     ctx.fillStyle    = isFocused
       ? 'rgba(8,12,31,0.9)'
-      : (hasStars ? '#ffd166' : (isHov ? '#4fc3f7' : 'rgba(200,220,255,0.8)'));
+      : (hasStars ? '#ffd166' : (isHov ? `rgb(${theme.highlight})` : `rgba(${theme.primary}, 0.8)`));
     // Display 1-10 regardless of actual level ID
-    ctx.fillText((idx + 1).toString(), node.x, hasStars ? node.y - 5 : node.y);
+    ctx.fillText((idx % 10 + 1).toString(), node.x, hasStars ? node.y - 5 : node.y);
     ctx.restore();
 
     // Star dots

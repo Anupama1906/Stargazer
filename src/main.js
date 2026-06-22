@@ -4,6 +4,8 @@ import GameScreen from './screens/GameScreen.js';
 
 import GalaxySelect from './screens/GalaxySelect.js';
 
+import Settings from './screens/Settings.js';
+
 class App {
   constructor() {
     this.container = document.getElementById('app');
@@ -18,6 +20,7 @@ class App {
       case 'galaxy-select': this.current = new GalaxySelect(this.container, this.navigate.bind(this)); break;
       case 'level-select': this.current = new LevelSelect(this.container, this.navigate.bind(this), data); break;
       case 'game':       this.current = new GameScreen(this.container, this.navigate.bind(this), data); break;
+      case 'settings':   this.current = new Settings(this.container, this.navigate.bind(this)); break;
     }
   }
 }

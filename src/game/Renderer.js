@@ -61,11 +61,11 @@ export class Renderer {
 
   // ── drawing ─────────────────────────────────────────────────────────────
 
-  drawGrid(rings, sectors) {
+  drawGrid(rings, sectors, theme) {
     const { baseRadius, ringWidth, rotation } = this.opt;
     const ctx = this.ctx;
 
-    ctx.strokeStyle = 'rgba(200,220,255,0.20)';
+    ctx.strokeStyle = `rgba(${theme.primary}, 0.20)`;
     ctx.lineWidth = 1;
 
     // Rings
@@ -89,7 +89,7 @@ export class Renderer {
     }
 
     // Regular nodes (dots)
-    ctx.fillStyle = 'rgba(200,220,255,0.4)';
+    ctx.fillStyle = `rgba(${theme.primary}, 0.4)`;
     for (let r = 0; r < rings; r++) {
       for (let s = 0; s < sectors; s++) {
         const c = this.getNodeCenter(r, s, sectors);
@@ -215,7 +215,7 @@ export class Renderer {
     // Direction vector towards center
     ctx.rotate(angle + Math.PI); // point inwards
     
-    ctx.fillStyle = '#080c1f';
+    ctx.fillStyle = '#000'; // Make it black inside so it works with any theme
     ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.moveTo(5, 0); // Tip

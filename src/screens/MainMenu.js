@@ -1,3 +1,5 @@
+import { settings } from '../utils/settings.js';
+
 export default class MainMenu {
   constructor(container, navigate) {
     this.container  = container;
@@ -54,7 +56,7 @@ export default class MainMenu {
       { id:'play',     angle: -Math.PI / 2, icon:'▶', action: () => this.navigate('galaxy-select') },
       { id:'help',     angle:  0,           icon:'?', action: () => this._help() },
       { id:'quit',     angle:  Math.PI / 2, icon:'✕', action: () => window.close() },
-      { id:'settings', angle:  Math.PI,     icon:'✦', action: () => {} },
+      { id:'settings', angle:  Math.PI,     icon:'✦', action: () => this.navigate('settings') },
     ].map(b => ({
       ...b,
       x: cx + this.orbitR * Math.cos(b.angle),
@@ -125,8 +127,9 @@ export default class MainMenu {
     const { ctx, canvas, t } = this;
     const W = canvas.width, H = canvas.height;
     const cx = W / 2, cy = H / 2;
+    const theme = settings.getTheme();
 
-    ctx.fillStyle = '#080c1f';
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, W, H);
 
     this.stars.forEach(s => {
@@ -134,28 +137,28 @@ export default class MainMenu {
       const o = s.o * (0.5 + 0.5 * Math.sin(s.ph));
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(200,220,255,${o})`;
+      ctx.fillStyle = theme.starBase + o + ')';
       ctx.fill();
     });
 
-    const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, this.orbitR * 1.5);
-    rg.addColorStop(0, 'rgba(18,26,80,0.28)');
-    rg.addColorStop(1, 'rgba(8,12,31,0)');
+    const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W, H) * 0.45);
+    rg.addColorStop(0, theme.bgGradStart);
+    rg.addColorStop(1, theme.bgGradEnd);
     ctx.fillStyle = rg;
     ctx.fillRect(0, 0, W, H);
 
     // Orbit ring
     ctx.beginPath();
     ctx.arc(cx, cy, this.orbitR, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(200,220,255,0.22)';
-    ctx.lineWidth = 0.8;
+    ctx.strokeStyle = `rgba(${theme.primary}, 0.12)`;
+    ctx.lineWidth   = 0.8;
     ctx.stroke();
 
-    // 8-pointed star logo
-    this._drawStar(cx, cy, Math.min(W, H) * 0.135, t * 0.04);
+    // Central Star
+    this._drawStar(cx, cy, Math.min(W, H) * 0.08, t * 0.05, theme);
 
-    // Buttons
-    this.buttons.forEach((b, i) => this._drawBtn(b, i, t));
+    // Nodes
+    this.buttons.forEach((b, i) => this._drawNode(b, i, t, theme));
 
     // Help panel
     if (this._showingHelp) this._drawHelp(cx, cy, W, H);
@@ -166,90 +169,114 @@ export default class MainMenu {
     // Update bottom label text
     const labelEl = document.querySelector('.menu-play-label');
     if (labelEl) {
-      if (this.hovered) {
-        labelEl.textContent = this.hovered.toUpperCase();
+      if (this.hovered !== null) {
+        labelEl.textContent = this.buttons[this.hovered].id.toUpperCase();
       } else {
         labelEl.textContent = this.buttons[this.focusedIdx].id.toUpperCase();
       }
     }
   }
 
-  _drawStar(cx, cy, size, rot) {
+  _drawStar(cx, cy, size, rot, theme) {
     const ctx = this.ctx, pts = 8;
+    const pulse = 1 + 0.1 * Math.sin(rot * 15);
+    
     ctx.save();
-    ctx.shadowColor = 'rgba(255,255,255,0.12)';
-    ctx.shadowBlur  = 28;
+    
+    // Outer high-tech dashed ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 1.3, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${theme.primary}, 0.15)`;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 12]);
+    ctx.lineDashOffset = -rot * 40;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Glowing aura
+    ctx.shadowColor = `rgba(${theme.highlight}, 0.6)`;
+    ctx.shadowBlur  = 35 * pulse;
+    
+    // Star gradient
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    grad.addColorStop(0.5, 'rgba(220, 240, 255, 0.9)');
+    grad.addColorStop(1, 'rgba(150, 200, 255, 0.4)');
+    
     ctx.beginPath();
     for (let i = 0; i < pts * 2; i++) {
       const a = rot + (i * Math.PI) / pts;
-      const r = i % 2 === 0 ? size : size * 0.41;
+      const r = i % 2 === 0 ? size : size * 0.35;
       if (i === 0) ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
       else         ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
     }
     ctx.closePath();
-    // Octagon hole
-    const hR = size * 0.285;
-    ctx.moveTo(cx + hR, cy);
+    
+    // Inner rotating octagon hole
+    const hR = size * 0.25;
+    const innerRot = -rot * 1.5;
+    ctx.moveTo(cx + hR * Math.cos(innerRot), cy + hR * Math.sin(innerRot));
     for (let i = 1; i <= 8; i++) {
-      const a = (i / 8) * Math.PI * 2;
+      const a = innerRot + (i / 8) * Math.PI * 2;
       ctx.lineTo(cx + hR * Math.cos(a), cy + hR * Math.sin(a));
     }
     ctx.closePath();
-    ctx.fillStyle = 'rgba(255,255,255,0.94)';
+    
+    ctx.fillStyle = grad;
     ctx.fill('evenodd');
+    
+    // Inner diamond core
+    ctx.shadowBlur = 10 * pulse;
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {
+      const a = rot * 2 + (i * Math.PI) / 2;
+      const r = size * 0.15;
+      if (i === 0) ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+      else         ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fill();
+
     ctx.restore();
   }
 
-  _drawBtn(btn, idx, t) {
+  _drawNode(b, idx, t, theme) {
     const ctx       = this.ctx;
     const isFocused = idx === this.focusedIdx;
-    const isHov     = this.hovered === btn.id;
-    const pulse     = 1 + 0.042 * Math.sin(t * 1.4 + btn.angle);
-    const r         = btn.r * (isFocused ? 1.08 : 1) * pulse;
+    const isHov     = this.hovered === idx;
+    const pulse     = 1 + 0.05 * Math.sin(t * 1.2 + idx);
+    const r         = b.r * (isFocused ? 1.15 : 1) * pulse;
 
-    // Glow ring for focused/hovered
-    if (isFocused) {
-      ctx.save();
-      ctx.shadowColor = 'rgba(255,255,255,0.6)';
-      ctx.shadowBlur  = 22;
-      ctx.beginPath();
-      ctx.arc(btn.x, btn.y, r + 4, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-      ctx.lineWidth   = 1.2;
-      ctx.stroke();
-      ctx.restore();
-    } else if (isHov) {
-      ctx.save();
-      ctx.shadowColor = 'rgba(79,195,247,0.55)';
-      ctx.shadowBlur  = 20;
-      ctx.beginPath();
-      ctx.arc(btn.x, btn.y, r + 3, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(79,195,247,0.5)';
-      ctx.lineWidth   = 1;
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // Circle fill — white for focused, dark for normal
+    // Outer glow
+    ctx.save();
+    ctx.shadowColor = isFocused ? 'rgba(255,255,255,0.7)' : (isHov ? `rgba(${theme.highlight}, 0.6)` : 'transparent');
+    ctx.shadowBlur  = 20;
+    
+    // Orbit dot
     ctx.beginPath();
-    ctx.arc(btn.x, btn.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = isFocused
-      ? 'rgba(255,255,255,0.95)'
-      : (isHov ? 'rgba(79,195,247,0.1)' : 'rgba(10,15,42,0.88)');
+    ctx.arc(b.x, b.y, r + 6, 0, Math.PI * 2);
+    ctx.strokeStyle = isFocused ? 'rgba(255,255,255,0.5)' : (isHov ? `rgba(${theme.highlight}, 0.4)` : `rgba(${theme.primary}, 0.08)`);
+    ctx.lineWidth   = isFocused ? 1.5 : 1;
+    ctx.stroke();
+    ctx.restore();
+
+    // Node body
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = isFocused ? 'rgba(255,255,255,0.9)' : (isHov ? `rgba(${theme.highlight}, 0.15)` : 'rgba(10,14,38,0.85)');
     ctx.fill();
-    ctx.strokeStyle = isFocused
-      ? 'rgba(255,255,255,0.9)'
-      : (isHov ? 'rgba(79,195,247,0.55)' : 'rgba(200,220,255,0.28)');
-    ctx.lineWidth = 0.8;
+    ctx.strokeStyle = isFocused ? 'rgba(255,255,255,0.9)' : (isHov ? `rgba(${theme.highlight}, 0.7)` : `rgba(${theme.primary}, 0.25)`);
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     // Icon — dark on focused (white bg), bright otherwise
     ctx.save();
-    ctx.fillStyle    = isFocused ? 'rgba(8,12,31,0.9)' : (isHov ? '#4fc3f7' : 'rgba(200,220,255,0.72)');
-    ctx.font         = `${btn.id === 'help' ? '14px' : '11px'} 'Exo 2', sans-serif`;
+    ctx.fillStyle    = isFocused ? 'rgba(8,12,31,0.9)' : (isHov ? `rgba(${theme.highlight}, 1)` : `rgba(${theme.primary}, 0.72)`);
+    ctx.font         = `${b.id === 'help' ? '14px' : '11px'} 'Exo 2', sans-serif`;
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(btn.icon, btn.x, btn.y + 0.5);
+    ctx.fillText(b.icon, b.x, b.y + 0.5);
     ctx.restore();
   }
 

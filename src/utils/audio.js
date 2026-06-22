@@ -1,3 +1,5 @@
+import { settings } from './settings.js';
+
 // Tiny Web Audio API sound manager
 let _ctx = null;
 function ac() {
@@ -6,6 +8,7 @@ function ac() {
 }
 
 export function playMove() {
+  if (!settings.soundEnabled) return;
   try {
     const c = ac();
     const o = c.createOscillator();
@@ -21,6 +24,7 @@ export function playMove() {
 }
 
 export function playInvalid() {
+  if (!settings.soundEnabled) return;
   try {
     const c = ac();
     const o = c.createOscillator();
@@ -35,6 +39,7 @@ export function playInvalid() {
 }
 
 export function playWin() {
+  if (!settings.soundEnabled) return;
   try {
     const c = ac();
     [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {

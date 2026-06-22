@@ -1,6 +1,7 @@
 import { levels }       from '../game/levels.js';
 import { CircularGrid } from '../game/CircularGrid.js';
 import { Renderer }     from '../game/Renderer.js';
+import { settings }     from '../utils/settings.js';
 import { playMove, playWin, playInvalid } from '../utils/audio.js';
 
 const ANIM_MS = 200; // movement animation duration
@@ -375,8 +376,9 @@ export default class GameScreen {
   _draw() {
     const ctx = this.ctx;
     const W   = this.canvas.width, H = this.canvas.height;
+    const theme = settings.getTheme();
 
-    ctx.fillStyle = '#080c1f';
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, W, H);
 
     // Stars
@@ -385,12 +387,12 @@ export default class GameScreen {
       const o = s.o * (0.5 + 0.5 * Math.sin(s.ph));
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(200,220,255,${o})`;
+      ctx.fillStyle = theme.starBase + o + ')';
       ctx.fill();
     });
 
     // Grid
-    this.renderer.drawGrid(this.lvl.rings, this.lvl.sectors);
+    this.renderer.drawGrid(this.lvl.rings, this.lvl.sectors, theme);
 
     // Paths
     for (let i = 0; i < this.paths.length; i++) {
