@@ -5,12 +5,22 @@ import GameScreen from './screens/GameScreen.js';
 import GalaxySelect from './screens/GalaxySelect.js';
 
 import Settings from './screens/Settings.js';
+import { updateAmbientSettings } from './utils/ambient.js';
 
 class App {
   constructor() {
     this.container = document.getElementById('app');
     this.current = null;
     this.navigate('main-menu');
+    
+    // Start ambient music on first user interaction
+    const startAudio = () => {
+      updateAmbientSettings();
+      window.removeEventListener('click', startAudio);
+      window.removeEventListener('keydown', startAudio);
+    };
+    window.addEventListener('click', startAudio);
+    window.addEventListener('keydown', startAudio);
   }
 
   navigate(screen, data = {}) {

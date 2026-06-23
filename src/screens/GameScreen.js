@@ -15,6 +15,8 @@ export default class GameScreen {
     this.lvl       = levels.find(l => l.id === this.levelId);
 
     this.starfield = new Starfield();
+    this.pathPulses = [];
+    this.particles  = [];
 
     // Game state
     this.grid     = new CircularGrid(this.lvl.rings, this.lvl.sectors, this.lvl.blocked || []);
@@ -230,6 +232,11 @@ export default class GameScreen {
         if (p.tgt[0] === r && p.tgt[1] === s) {
           // Connect!
           this.connections[this.activePair] = true;
+          this.pathPulses.push({
+            path: [...this.paths[this.activePair]],
+            color: p.color,
+            t: 0
+          });
           this.mode = 'navigate';
           this.activePair = -1;
           this._updateStatus();
@@ -353,6 +360,19 @@ export default class GameScreen {
   _win() {
     this.won = true;
     playWin();
+    
+    // Burst particles
+    const W = this.canvas.width;
+    const H = this.canvas.height;
+    for (let i = 0; i < 150; i++) {
+      this.particles.push({
+        x: W / 2, y: H / 2,
+        vx: (Math.random() - 0.5) * 18,
+        vy: (Math.random() - 0.5) * 18,
+        life: 1.0,
+        color: this.lvl.pairs[Math.floor(Math.random() * this.lvl.pairs.length)].color
+      });
+    }
 
     try {
       const p = JSON.parse(localStorage.getItem('sg-progress') || '{}');
@@ -394,6 +414,17 @@ export default class GameScreen {
       }
       this.renderer.drawPath(pathToDraw, this.lvl.sectors, this.lvl.pairs[i].color);
     }
+    
+    // Pulse animations
+    for (let i = this.pathPulses.length - 1; i >= 0; i--) {
+      const p = this.pathPulses[i];
+      p.t += 0.08;
+      if (p.t > p.path.length - 1) {
+        this.pathPulses.splice(i, 1);
+        continue;
+      }
+      this.renderer.drawPulse(p.path, p.t, p.color, this.lvl.sectors);
+    }
 
     // Nodes
     this.renderer.drawNodes(this.lvl.pairs, this.connections, this.lvl.sectors);
@@ -416,6 +447,26 @@ export default class GameScreen {
        ctx.restore();
     } else {
        this.renderer.drawPlayer(this.pPos[0], this.pPos[1], this.lvl.sectors, this.time * 2.2);
+    }
+
+    // Win particles
+    if (this.particles.length > 0) {
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.015;
+        if (p.life <= 0) {
+          this.particles.splice(i, 1);
+          continue;
+        }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.random() * 2 + 1, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1.0;
     }
 
     // Advance animation

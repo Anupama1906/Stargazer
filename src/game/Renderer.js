@@ -192,6 +192,50 @@ export class Renderer {
     }
   }
 
+  drawPulse(path, t, color, sectors) {
+    if (path.length < 2) return;
+    const ctx = this.ctx;
+    const { baseRadius, ringWidth, rotation } = this.opt;
+    
+    const idx = Math.floor(t);
+    const frac = t - idx;
+    
+    if (idx >= path.length - 1) return;
+    
+    const [r1, s1] = path[idx];
+    const [r2, s2] = path[idx + 1];
+    
+    let x, y;
+    
+    if (r1 === r2) {
+      const radius = baseRadius + r1 * ringWidth;
+      const sa = rotation + s1 * (2 * Math.PI) / sectors;
+      const ea = rotation + s2 * (2 * Math.PI) / sectors;
+      
+      let diff = ea - sa;
+      if (diff > Math.PI) diff -= 2 * Math.PI;
+      if (diff < -Math.PI) diff += 2 * Math.PI;
+      
+      const angle = sa + diff * frac;
+      x = this.cx + radius * Math.cos(angle);
+      y = this.cy + radius * Math.sin(angle);
+    } else {
+      const p1 = this.getNodeCenter(r1, s1, sectors);
+      const p2 = this.getNodeCenter(r2, s2, sectors);
+      x = p1.x + (p2.x - p1.x) * frac;
+      y = p1.y + (p2.y - p1.y) * frac;
+    }
+    
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    ctx.fill();
+    ctx.restore();
+  }
+
   drawPlayer(ring, sector, sectors, pulse) {
     const ctx = this.ctx;
     const c = this.getNodeCenter(ring, sector, sectors);

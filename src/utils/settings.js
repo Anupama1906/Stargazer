@@ -58,6 +58,8 @@ class SettingsManager {
   toggleSound() {
     this.soundEnabled = !this.soundEnabled;
     this.save();
+    // Use dynamic import or fire event so we don't cause a circular dependency
+    import('./ambient.js').then(module => module.updateAmbientSettings());
   }
 
   cycleTheme() {
