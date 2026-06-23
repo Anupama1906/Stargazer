@@ -160,32 +160,32 @@ export class Renderer {
         // Connected Source
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(srcC.x, srcC.y, 8, 0, Math.PI * 2);
+        ctx.arc(srcC.x, srcC.y, 12, 0, Math.PI * 2);
         ctx.fill();
 
         // Connected Target
         ctx.translate(tgtC.x, tgtC.y);
         ctx.rotate(Math.PI / 4);
         ctx.beginPath();
-        ctx.roundRect(-7, -7, 14, 14, 2);
+        ctx.roundRect(-10, -10, 20, 20, 3);
         ctx.fill();
         ctx.restore();
       } else {
         // Unconnected Source (Double Circle)
         ctx.strokeStyle = p.color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(srcC.x, srcC.y, 8, 0, Math.PI * 2);
+        ctx.arc(srcC.x, srcC.y, 12, 0, Math.PI * 2);
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(srcC.x, srcC.y, 3, 0, Math.PI * 2);
+        ctx.arc(srcC.x, srcC.y, 5, 0, Math.PI * 2);
         ctx.stroke();
 
         // Unconnected Target (Hollow Diamond)
         ctx.translate(tgtC.x, tgtC.y);
         ctx.rotate(Math.PI / 4);
         ctx.beginPath();
-        ctx.rect(-6, -6, 12, 12);
+        ctx.rect(-9, -9, 18, 18);
         ctx.stroke();
         ctx.restore();
       }
@@ -252,7 +252,7 @@ export class Renderer {
     // Outer Circle
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(0, 0, 10, 0, Math.PI * 2);
+    ctx.arc(0, 0, 15, 0, Math.PI * 2);
     ctx.fill();
 
     // Inner Triangle pointing towards center
@@ -262,9 +262,9 @@ export class Renderer {
     ctx.fillStyle = '#000'; // Make it black inside so it works with any theme
     ctx.shadowBlur = 0;
     ctx.beginPath();
-    ctx.moveTo(5, 0); // Tip
-    ctx.lineTo(-3, 4);
-    ctx.lineTo(-3, -4);
+    ctx.moveTo(7, 0); // Tip
+    ctx.lineTo(-4.5, 6);
+    ctx.lineTo(-4.5, -6);
     ctx.closePath();
     ctx.fill();
 
@@ -285,26 +285,27 @@ export class Renderer {
 
     for (const [r, s] of blockedArray) {
       const c = this.getNodeCenter(r, s, sectors);
-      const angleOffset = this.opt.rotation + s * (2 * Math.PI) / sectors;
-      
+      ctx.save();
       ctx.translate(c.x, c.y);
-      ctx.rotate(angleOffset); // align with spoke
       
-      // Draw hexagon
+      // Draw an X
+      ctx.beginPath();
+      ctx.moveTo(-7, -7); ctx.lineTo(7, 7);
+      ctx.moveTo(7, -7); ctx.lineTo(-7, 7);
+      ctx.stroke();
+      
+      // Hexagon shape
       ctx.beginPath();
       for (let i = 0; i < 6; i++) {
-        const hexAngle = (i * Math.PI) / 3;
-        const hx = 6 * Math.cos(hexAngle);
-        const hy = 6 * Math.sin(hexAngle);
-        if (i === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        const a = i * Math.PI / 3 + Math.PI / 6;
+        if (i === 0) ctx.moveTo(9 * Math.cos(a), 9 * Math.sin(a));
+        else ctx.lineTo(9 * Math.cos(a), 9 * Math.sin(a));
       }
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
       
-      ctx.rotate(-angleOffset);
-      ctx.translate(-c.x, -c.y);
+      ctx.restore();
     }
     
     ctx.restore();
