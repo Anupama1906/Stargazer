@@ -2,6 +2,7 @@ import { levels }       from '../game/levels.js';
 import { CircularGrid } from '../game/CircularGrid.js';
 import { Renderer }     from '../game/Renderer.js';
 import { settings }     from '../utils/settings.js';
+import { Starfield }    from '../utils/starfield.js';
 import { playMove, playWin, playInvalid } from '../utils/audio.js';
 
 const ANIM_MS = 200; // movement animation duration
@@ -12,6 +13,8 @@ export default class GameScreen {
     this.navigate  = navigate;
     this.levelId   = data.levelId || 1;
     this.lvl       = levels.find(l => l.id === this.levelId);
+
+    this.starfield = new Starfield();
 
     // Game state
     this.grid     = new CircularGrid(this.lvl.rings, this.lvl.sectors, this.lvl.blocked || []);
@@ -30,7 +33,6 @@ export default class GameScreen {
     // Canvas/render
     this.raf      = null;
     this.time     = 0;
-    this.stars    = [];
     this.ctx      = null;
     this.renderer = null;
 
@@ -122,14 +124,9 @@ export default class GameScreen {
   }
 
   _genStars() {
-    const W = this.canvas.width, H = this.canvas.height;
-    this.stars = Array.from({ length: 250 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 1.2 + 0.2,
-      o: Math.random() * 0.7 + 0.1,
-      ph: Math.random() * Math.PI * 2,
-      spd: Math.random() * 0.03 + 0.005,
-    }));
+    const W = this.canvas.width  = window.innerWidth;
+    const H = this.canvas.height = window.innerHeight;
+    this.starfield.resize(W, H);
   }
 
   // ── game logic ────────────────────────────────────────────────────────
@@ -382,14 +379,7 @@ export default class GameScreen {
     ctx.fillRect(0, 0, W, H);
 
     // Stars
-    this.stars.forEach(s => {
-      s.ph += s.spd;
-      const o = s.o * (0.5 + 0.5 * Math.sin(s.ph));
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = theme.starBase + o + ')';
-      ctx.fill();
-    });
+    this.starfield.draw(ctx, theme);
 
     // Grid
     this.renderer.drawGrid(this.lvl.rings, this.lvl.sectors, theme);

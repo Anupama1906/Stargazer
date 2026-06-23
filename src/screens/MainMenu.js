@@ -1,4 +1,5 @@
 import { settings } from '../utils/settings.js';
+import { Starfield } from '../utils/starfield.js';
 
 export default class MainMenu {
   constructor(container, navigate) {
@@ -6,7 +7,7 @@ export default class MainMenu {
     this.navigate   = navigate;
     this.raf        = null;
     this.t          = 0;
-    this.stars      = [];
+    this.starfield  = new Starfield();
     this.buttons    = [];
     this.hovered    = null;   // button id under mouse
     this.focusedIdx = 0;      // keyboard-focused button index (clockwise from top)
@@ -64,17 +65,7 @@ export default class MainMenu {
       r: 21,
     }));
 
-    this._genStars(W, H);
-  }
-
-  _genStars(W, H) {
-    this.stars = Array.from({ length: 250 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 1.2 + 0.2,
-      o: Math.random() * 0.7 + 0.1,
-      ph: Math.random() * Math.PI * 2,
-      spd: Math.random() * 0.03 + 0.005,
-    }));
+    this.starfield.resize(W, H);
   }
 
   // ── interaction ──────────────────────────────────────────────────────
@@ -132,14 +123,7 @@ export default class MainMenu {
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, W, H);
 
-    this.stars.forEach(s => {
-      s.ph += s.spd;
-      const o = s.o * (0.5 + 0.5 * Math.sin(s.ph));
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = theme.starBase + o + ')';
-      ctx.fill();
-    });
+    this.starfield.draw(ctx, theme);
 
     const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W, H) * 0.45);
     rg.addColorStop(0, theme.bgGradStart);

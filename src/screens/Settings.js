@@ -1,4 +1,5 @@
 import { settings } from '../utils/settings.js';
+import { Starfield } from '../utils/starfield.js';
 
 export default class Settings {
   constructor(container, navigate) {
@@ -6,7 +7,7 @@ export default class Settings {
     this.navigate   = navigate;
     this.raf        = null;
     this.t          = 0;
-    this.stars      = [];
+    this.starfield  = new Starfield();
     this.nodes      = [];
     this.hovered    = null;     // nodeIdx under mouse, or -1
     this.focusedIdx = 0;        // keyboard-focused node index (0-1)
@@ -55,17 +56,7 @@ export default class Settings {
       y: cy + this.orbitR * Math.sin(b.angle)
     }));
 
-    this._genStars(W, H);
-  }
-
-  _genStars(W, H) {
-    this.stars = Array.from({ length: 250 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 1.2 + 0.2,
-      o: Math.random() * 0.7 + 0.1,
-      ph: Math.random() * Math.PI * 2,
-      spd: Math.random() * 0.03 + 0.005,
-    }));
+    this.starfield.resize(W, H);
   }
 
   _hitNode(mx, my) {
@@ -141,13 +132,7 @@ export default class Settings {
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, W, H);
 
-    this.stars.forEach(s => {
-      s.ph += s.spd;
-      const o = s.o * (0.5 + 0.5 * Math.sin(s.ph));
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = theme.starBase + o + ')'; 
-      ctx.fill();
-    });
+    this.starfield.draw(ctx, theme);
 
     const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, W * 0.5);
     rg.addColorStop(0, theme.bgGradStart);

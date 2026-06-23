@@ -6,10 +6,10 @@ export const galaxies = [
 const baseLevels = [
   {
     id: 1, name: 'First Connection',
-    rings: 2, sectors: 4,
+    rings: 1, sectors: 4,
     playerStart: [0, 0],
     pairs: [
-      { color: '#c8d8f0', src: [1, 3], tgt: [0, 1] }
+      { color: '#c8d8f0', src: [0, 1], tgt: [0, 3] }
     ]
   },
   {
@@ -17,8 +17,7 @@ const baseLevels = [
     rings: 2, sectors: 4,
     playerStart: [0, 0],
     pairs: [
-      { color: '#c8d8f0', src: [0, 1], tgt: [0, 3] },
-      { color: '#ffd166', src: [1, 1], tgt: [1, 3] }
+      { color: '#c8d8f0', src: [1, 1], tgt: [0, 3] },
     ]
   },
   {

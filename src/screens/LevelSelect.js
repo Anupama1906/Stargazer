@@ -1,5 +1,6 @@
 import { levels } from '../game/levels.js';
 import { settings } from '../utils/settings.js';
+import { Starfield } from '../utils/starfield.js';
 
 // Inner orbit: levels 1-5 (nodeIdx 0-4)
 // Outer orbit: levels 6-10 (nodeIdx 5-9)
@@ -11,9 +12,10 @@ export default class LevelSelect {
     this.navigate   = navigate;
     this.galaxyId   = data.galaxyId || 1;
     this.galaxyLevels = levels.filter(l => l.galaxyId === this.galaxyId);
+    this.data       = data;
     this.raf        = null;
     this.t          = 0;
-    this.stars      = [];
+    this.starfield  = new Starfield();
     this.nodes      = [];
     this.hovered    = null;     // nodeIdx under mouse, or -1
     this.focusedIdx = 0;        // keyboard-focused node index (0-9)
@@ -85,17 +87,7 @@ export default class LevelSelect {
       };
     });
 
-    this._genStars(W, H);
-  }
-
-  _genStars(W, H) {
-    this.stars = Array.from({ length: 250 }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 1.2 + 0.2,
-      o: Math.random() * 0.7 + 0.1,
-      ph: Math.random() * Math.PI * 2,
-      spd: Math.random() * 0.03 + 0.005,
-    }));
+    this.starfield.resize(W, H);
   }
 
   // ── interaction ──────────────────────────────────────────────────────
@@ -188,12 +180,7 @@ export default class LevelSelect {
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, W, H);
 
-    this.stars.forEach(s => {
-      s.ph += s.spd;
-      const o = s.o * (0.5 + 0.5 * Math.sin(s.ph));
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = theme.starBase + o + ')'; ctx.fill();
-    });
+    this.starfield.draw(ctx, theme);
 
     const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, this.outerR * 1.4);
     rg.addColorStop(0, theme.bgGradStart);
